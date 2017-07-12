@@ -65,7 +65,7 @@
       this.player.animations.add('walking', [0,1,2,1], 6, true);
       this.player.play('walking');
       this.game.physics.arcade.enable(this.player);
-      // adding collision detection
+      // adding collision detection.
 
 
 
