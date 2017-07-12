@@ -15,10 +15,13 @@ var GameState = {
     // enable curser keys by accessing the phaser keyboard functions
     this.cursors = this.game.input.keyboard.createCursorKeys();
 
+
+    //set game boundaries. This can be larger than the viewable area
+    this.game.world.setBounds(0,0/* from top left*/,360/* x*/, 700/* y*/)
     // create a constant variable that can be adjusted for all code that uses it here
 
     this.RUNNING_SPEED = 180;
-    this.JUMPING_SPEED = 450;
+    this.JUMPING_SPEED = 550;
 
 
 
@@ -33,8 +36,8 @@ var GameState = {
     this.load.image('platform', 'assets/images/platform.png');
 
     this.load.spritesheet('fire', 'assets/images/fire_spritesheet.png', 20, 21, 2, 1, 1);
-
     this.load.spritesheet('player', 'assets/images/player_spritesheet.png', 28, 30, 5, 1, 1);
+    this.load.text('level', 'assets/data/level.json');
 
 
   },
@@ -43,26 +46,40 @@ var GameState = {
 
     //creating 2d world with adding platform sprites and ground
 
-    this.ground = this.add.sprite(0, 500, 'ground');
+    this.ground = this.add.sprite(0, 630, 'ground');
     this.game.physics.arcade.enable(this.ground); // enable physics for this object
     this.ground.body.allowGravity = false; // not allow gravity for this object
     this.ground.body.immovable = true; // not allowing object to move if pushed or hit
 
-    //creating a group of platforms
 
+
+
+
+
+    //parse the json file holding level values that can be changed externally - this data is now stored in levelData variable
+
+    this.levelData = JSON.parse(this.game.cache.getText('level'));
+
+
+
+    /*
+
+    This data hee has moved to level.json file in order to use for adding new levels to the game
+      //creating a group of platforms
     //start with a data array with x and y locations initiated on line 67
-    var platformData = [
-      {"x": 0, "y": 430},
-      {"x": 90, "y": 290},
-      {"x": 0, "y": 140}
-    ];
+    // var platformData = [
+    //   {"x": 0, "y": 430},
+    //   {"x": 45, "y": 550},
+    //   {"x": 90, "y": 290},
+    //   {"x": 0, "y": 140}
+    // ];*/
 
     // Then create a group of platforms
 
     this.platforms = this.add.group();
     this.platforms.enableBody = true; // enable physics for group
 
-    platformData.forEach(function(element){
+    this.levelData.platformData.forEach(function(element){
       this.platforms.create(element.x, element.y, 'platform');
     }, this);
 
@@ -80,13 +97,16 @@ var GameState = {
     // this.platform2.body.immovable = true;
 
     //adding player with animation
-    this.player = this.add.sprite(100, 200, 'player', 3);
+    this.player = this.add.sprite(this.levelData.playerStart.x /* this is from the level.json file*/, this.levelData.playerStart.y, 'player', 3);
     this.player.anchor.setTo(0.5);
     this.player.animations.add('walking', [0, 1, 2, 1], 6, true);
-    this.player.play('walking');
+
     this.game.physics.arcade.enable(this.player);
     this.player.customParams = {}; // adding default empty custom params for now
-    // adding collision detection.
+    // adding camera follow
+
+    this.game.camera.follow(this.player);
+
 
 
     // adding custom onscreen control
@@ -112,8 +132,16 @@ var GameState = {
 
     if (this.cursors.left.isDown || this.player.customParams.isMovingLeft) {
       this.player.body.velocity.x = -this.RUNNING_SPEED;
+      this.player.scale.setTo(1,1); // setting scale or direction of player back
+      this.player.play('walking');// player animation
     } else if (this.cursors.right.isDown || this.player.customParams.isMovingRight) {
       this.player.body.velocity.x = this.RUNNING_SPEED;
+      this.player.scale.setTo(-1,1);// set sprite to flip over to the other side x axis
+      this.player.play('walking');
+    } else {
+      this.player.animations.stop();
+      this.player.frame = 3;
+
     }
 
 
@@ -137,6 +165,11 @@ var GameState = {
     this.rightArrow.alpha = 0.5;
     this.actionButton.alpha = 0.5;
 
+    //set buttons fixed to camera so they do not go off teh map
+
+    this.leftArrow.fixedToCamera = true;
+    this.rightArrow.fixedToCamera = true;
+    this.actionButton.fixedToCamera = true;
     // listen for events fo the action buttons here
 
     // jumping
@@ -179,7 +212,7 @@ var GameState = {
 };
 
 //initiate the Phaser Framework
-var game = new Phaser.Game(360, 640, Phaser.AUTO);
+var game = new Phaser.Game(360, 592, Phaser.AUTO);
 
 game.state.add('GameState', GameState);
 game.state.start('GameState');
