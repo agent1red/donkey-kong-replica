@@ -18,7 +18,7 @@
       // create a constant variable that can be adjusted for all code that uses it here
 
       this.RUNNING_SPEED = 180;
-      this.JUMPING_SPEED = 550;
+      this.JUMPING_SPEED = 450;
 
 
 
@@ -79,11 +79,12 @@
    update: function() {
       // always use collision detection in the update method to ensure it is checked all the time and not jsut once
 
+      
       this.game.physics.arcade.collide(this.player, this.ground, this.landed);
       this.game.physics.arcade.collide(this.player, this.platform, this.landed);
       this.game.physics.arcade.collide(this.player, this.platform2, this.landed);
-      // listen for key control of player
 
+      // listen for key control of player. setting velocity to 0 so that the player object doesn't continue int he same direction and reverts back to a velocity of zero when the cursor key is nnot pressed anymore
       this.player.body.velocity.x = 0;
 
       if(this.cursors.left.isDown){
@@ -91,11 +92,19 @@
       } else if (this.cursors.right.isDown) {
          this.player.body.velocity.x = this.RUNNING_SPEED;
       }
+
+
+      // for jumping this is on the y axis. to ensure jumping doesn't happen without the character being on the ground you add the touching.down value as part of the argument
+      if(this.cursors.up.isDown && this.player.body.touching.down){
+         this.player.body.velocity.y = -this.JUMPING_SPEED;
+      }
    },
 
    landed: function(player, ground) {
       console.log('landed');
    }
+
+
 
  };
 
