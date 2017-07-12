@@ -48,16 +48,36 @@ var GameState = {
     this.ground.body.allowGravity = false; // not allow gravity for this object
     this.ground.body.immovable = true; // not allowing object to move if pushed or hit
 
-    //creating new variable to hold platform sprite adding new variables to use the platform sprite image. When object is created "this" is not needed to refer to the class.
-    this.platform = this.add.sprite(0, 300, 'platform');
-    this.game.physics.arcade.enable(this.platform);
-    this.platform.body.allowGravity = false;
-    this.platform.body.immovable = true;
+    //creating a group of platforms
 
-    this.platform2 = this.add.sprite(50, 400, 'platform');
-    this.game.physics.arcade.enable(this.platform2);
-    this.platform2.body.allowGravity = false;
-    this.platform2.body.immovable = true;
+    //start with a data array with x and y locations initiated on line 67
+    var platformData = [
+      {"x": 0, "y": 430},
+      {"x": 90, "y": 290},
+      {"x": 0, "y": 140}
+    ];
+
+    // Then create a group of platforms
+
+    this.platforms = this.add.group();
+    this.platforms.enableBody = true; // enable physics for group
+
+    platformData.forEach(function(element){
+      this.platforms.create(element.x, element.y, 'platform');
+    }, this);
+
+    this.platforms.setAll('body.immovable', true); // set phisics for platform group
+    this.platforms.setAll('body.allowGravity', false);
+
+    // this.platform = this.add.sprite(0, 300, 'platform');
+    // this.game.physics.arcade.enable(this.platform);
+    // this.platform.body.allowGravity = false;
+    // this.platform.body.immovable = true;
+    //
+    // this.platform2 = this.add.sprite(50, 400, 'platform');
+    // this.game.physics.arcade.enable(this.platform2);
+    // this.platform2.body.allowGravity = false;
+    // this.platform2.body.immovable = true;
 
     //adding player with animation
     this.player = this.add.sprite(100, 200, 'player', 3);
@@ -83,9 +103,9 @@ var GameState = {
     // always use collision detection in the update method to ensure it is checked all the time and not jsut once
 
 
-    this.game.physics.arcade.collide(this.player, this.ground, this.landed);
-    this.game.physics.arcade.collide(this.player, this.platform, this.landed);
-    this.game.physics.arcade.collide(this.player, this.platform2, this.landed);
+    this.game.physics.arcade.collide(this.player, this.ground);
+    this.game.physics.arcade.collide(this.player, this.platforms);
+
 
     // listen for key control of player. setting velocity to 0 so that the player object doesn't continue int he same direction and reverts back to a velocity of zero when the cursor key is nnot pressed anymore
     this.player.body.velocity.x = 0;
@@ -105,7 +125,7 @@ var GameState = {
   },
 
   landed: function(player, ground) {
-    console.log('landed');
+
   },
   // add the controls as sprites that will function as buttons
   createOnscreenControls: function() {
