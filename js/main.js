@@ -31,7 +31,7 @@ var GameState = {
     this.load.image('actionButton', 'assets/images/actionButton.png');
     this.load.image('arrowButton', 'assets/images/arrowButton.png');
     this.load.image('barrel', 'assets/images/barrel.png');
-    this.load.image('gorilla', 'assets/images/gorilla3.png');
+    this.load.image('goal', 'assets/images/gorilla3.png');
     this.load.image('ground', 'assets/images/ground.png');
     this.load.image('platform', 'assets/images/platform.png');
 
@@ -86,6 +86,19 @@ var GameState = {
     this.platforms.setAll('body.immovable', true); // set phisics for platform group
     this.platforms.setAll('body.allowGravity', false);
 
+    // adding fires to the platform as bad guys
+
+    this.fires = this.add.group();
+    this.fires.enableBody = true;
+
+    this.levelData.fireData.forEach(function(element){
+    fire = this.fires.create(element.x, element.y, 'fire');
+    fire.animations.add('fire', [0,1], 10, true);
+    fire.play('fire');
+    }, this);
+    this.fires.setAll('body.allowGravity', false);
+
+
     // this.platform = this.add.sprite(0, 300, 'platform');
     // this.game.physics.arcade.enable(this.platform);
     // this.platform.body.allowGravity = false;
@@ -95,6 +108,13 @@ var GameState = {
     // this.game.physics.arcade.enable(this.platform2);
     // this.platform2.body.allowGravity = false;
     // this.platform2.body.immovable = true;
+
+
+    // create the goal here which is to make it to the gorrila
+
+    this.goal = this.add.sprite(this.levelData.goal.x, this.levelData.goal.y, 'goal' );
+    this.game.physics.arcade.enable(this.goal);
+    this.goal.body.allowGravity = false;
 
     //adding player with animation
     this.player = this.add.sprite(this.levelData.playerStart.x /* this is from the level.json file*/, this.levelData.playerStart.y, 'player', 3);
@@ -126,7 +146,8 @@ var GameState = {
     this.game.physics.arcade.collide(this.player, this.ground);
     this.game.physics.arcade.collide(this.player, this.platforms);
 
-
+    this.game.physics.arcade.overlap(this.player, this.fires, this.killPlayer);
+    this.game.physics.arcade.overlap(this.player, this.goal, this.win);
     // listen for key control of player. setting velocity to 0 so that the player object doesn't continue int he same direction and reverts back to a velocity of zero when the cursor key is nnot pressed anymore
     this.player.body.velocity.x = 0;
 
@@ -200,12 +221,19 @@ var GameState = {
       this.player.customParams.isMovingRight = false;
     }, this);
 
+  },
+
+  killPlayer: function(player, fire) {
+    console.log('ouch!');
+    game.state.start('GameState');
+  },
 
 
+  win: function(player, goal) {
+    alert('we have a winner!');
+    game.state.start('GameState');
+  },
 
-
-
-  }
 
 
 
