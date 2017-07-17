@@ -133,8 +133,14 @@ var GameState = {
 
     this.createOnscreenControls();
 
+    // implement a group of barrels
 
+    this.barrels = this.add.group();
+    this.barrels.enableBody = true;
 
+    //create a loop for barrels to roll down the map
+    this.createBarrel(); // initial barrel created before the 5 second counter loop starts
+    this.barrelCreator = this.game.time.events.loop(Phaser.Timer.SECOND * this.levelData.barrelFrequency, this.createBarrel, this);
 
 
   },
@@ -142,11 +148,18 @@ var GameState = {
   update: function() {
     // always use collision detection in the update method to ensure it is checked all the time and not jsut once
 
-
+    // collision detection with player and ground
     this.game.physics.arcade.collide(this.player, this.ground);
     this.game.physics.arcade.collide(this.player, this.platforms);
 
+    // collision detection with barrel and ground
+    this.game.physics.arcade.collide(this.barrels, this.ground);
+    this.game.physics.arcade.collide(this.barrels, this.platforms);
+
+      // collision detection with player and fires
     this.game.physics.arcade.overlap(this.player, this.fires, this.killPlayer);
+    this.game.physics.arcade.overlap(this.player, this.barrels, this.killPlayer);
+
     this.game.physics.arcade.overlap(this.player, this.goal, this.win);
     // listen for key control of player. setting velocity to 0 so that the player object doesn't continue int he same direction and reverts back to a velocity of zero when the cursor key is nnot pressed anymore
     this.player.body.velocity.x = 0;
@@ -165,17 +178,21 @@ var GameState = {
 
     }
 
-
+    this.player.body.collideWorldBounds = true;
+    this.player.body.bounce.set(1,0);
     // for jumping this is on the y axis. to ensure jumping doesn't happen without the character being on the ground you add the touching.down value as part of the argument
     if ((this.cursors.up.isDown || this.player.customParams.mustJump) && this.player.body.touching.down) {
       this.player.body.velocity.y = -this.JUMPING_SPEED;
       this.player.customParams.mustJump = false;
     }
+
+    // to kill each barrel element that reaches the bottom
+    this.barrels.forEach(function(element){
+      if(element.x < 10 && element.y >600){
+        element.kill();}
+    },this);
   },
 
-  landed: function(player, ground) {
-
-  },
   // add the controls as sprites that will function as buttons
   createOnscreenControls: function() {
 
@@ -223,17 +240,33 @@ var GameState = {
 
   },
 
+  // our kill player function
   killPlayer: function(player, fire) {
     console.log('ouch!');
     game.state.start('GameState');
   },
 
-
+  // our win function
   win: function(player, goal) {
     alert('we have a winner!');
     game.state.start('GameState');
   },
 
+  createBarrel: function() {
+    var barrel = this.barrels.getFirstExists(false);// get first dead barrel object
+
+    if (!barrel) { // if dead barrel isn't there make new barrel
+      barrel = this.barrels.create(20,90, 'barrel'); // if no barrel present then create it
+
+    }
+
+    // set out of bounds collide to stop barrels from going off screen
+    barrel.body.collideWorldBounds = true;
+    barrel.body.bounce.set(1,0);
+
+    barrel.reset(this.levelData.goal.x, this.levelData.goal.y);
+    barrel.body.velocity.x = this.levelData.barrelSpeed;
+  }
 
 
 
