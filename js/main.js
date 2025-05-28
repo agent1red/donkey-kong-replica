@@ -1,279 +1,338 @@
 // this game will use a 2d game engine
 
-
-var GameState = {
+// =========================================================================
+// Boot State
+// =========================================================================
+var Boot = {
   init: function() {
+    // Set scaling options
     this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
     this.scale.pageAlignHorizontally = true;
     this.scale.pageAlignVertically = true;
-
-    // enabeling phisics engine on global setting
-
-    this.game.physics.startSystem(Phaser.Physics.ARCADE); // adding phaser physics
-    this.game.physics.arcade.gravity.y = 1000; // adding gravity 1000 can be changed around
-
-    // enable curser keys by accessing the phaser keyboard functions
-    this.cursors = this.game.input.keyboard.createCursorKeys();
-
-
-    //set game boundaries. This can be larger than the viewable area
-    this.game.world.setBounds(0,0/* from top left*/,360/* x*/, 700/* y*/)
-    // create a constant variable that can be adjusted for all code that uses it here
-
-    this.RUNNING_SPEED = 180;
-    this.JUMPING_SPEED = 550;
-
-
-
   },
   preload: function() {
-    // Load the game assets here before the game will start
+    // (Optional) Load a loading bar asset if you have one.
+  },
+  create: function() {
+    // Start the Preload state
+    this.state.start('Preload');
+  }
+};
+
+// =========================================================================
+// Preload State
+// =========================================================================
+var Preload = {
+  preload: function() {
+    // Load all game assets
     this.load.image('actionButton', 'assets/images/actionButton.png');
     this.load.image('arrowButton', 'assets/images/arrowButton.png');
     this.load.image('barrel', 'assets/images/barrel.png');
     this.load.image('goal', 'assets/images/gorilla3.png');
     this.load.image('ground', 'assets/images/ground.png');
     this.load.image('platform', 'assets/images/platform.png');
-
     this.load.spritesheet('fire', 'assets/images/fire_spritesheet.png', 20, 21, 2, 1, 1);
     this.load.spritesheet('player', 'assets/images/player_spritesheet.png', 28, 30, 5, 1, 1);
-    this.load.text('level', 'assets/data/level.json');
+    this.load.text('level1', 'assets/data/level1.json');
+    this.load.text('level2', 'assets/data/level2.json');
+    this.load.text('level3', 'assets/data/level3.json');
+    this.load.text('level4', 'assets/data/level4.json');
+    this.load.text('level5', 'assets/data/level5.json');
+    this.load.text('level6', 'assets/data/level6.json');
+    this.load.text('level7', 'assets/data/level7.json');
+    this.load.text('level8', 'assets/data/level8.json');
+    this.load.text('level9', 'assets/data/level9.json');
+    this.load.text('level10', 'assets/data/level10.json');
+    this.load.text('level11', 'assets/data/level11.json');
+    this.load.text('level12', 'assets/data/level12.json');
+    this.load.text('level13', 'assets/data/level13.json');
+    this.load.text('level14', 'assets/data/level14.json');
+    this.load.text('level15', 'assets/data/level15.json');
+    this.load.text('level16', 'assets/data/level16.json');
+    this.load.text('level17', 'assets/data/level17.json');
+    this.load.text('level18', 'assets/data/level18.json');
+    this.load.text('level19', 'assets/data/level19.json');
+    this.load.text('level20', 'assets/data/level20.json');
+  },
+  create: function() {
+    // Start the MainMenu state
+    this.state.start('MainMenu');
+  }
+};
 
+// =========================================================================
+// MainMenu State
+// =========================================================================
+var MainMenu = {
+  create: function() {
+    // Display a game title
+    this.add.text(this.game.world.centerX, this.game.world.centerY - 100, 'Jungle Kong', { font: '48px Arial', fill: '#fff' }).anchor.setTo(0.5);
+    
+    // Display a "Start Game" button
+    var startButton = this.add.text(this.game.world.centerX, this.game.world.centerY, 'Start Game', { font: '32px Arial', fill: '#fff', backgroundColor: '#555', padding: { x: 20, y: 10 } });
+    startButton.anchor.setTo(0.5);
+    startButton.inputEnabled = true;
+    startButton.events.onInputDown.addOnce(this.startGame, this);
+  },
+  startGame: function() {
+    // Start PlayLevel state with level 1
+    this.state.start('PlayLevel', true, false, 1);
+  }
+};
 
+// =========================================================================
+// LevelComplete State
+// =========================================================================
+var LevelComplete = {
+  init: function(nextLevel) {
+    this.nextLevel = nextLevel;
+  },
+  create: function() {
+    // Display "Level Complete!" message
+    this.add.text(this.game.world.centerX, this.game.world.centerY - 50, 'Level Complete!', { font: '32px Arial', fill: '#fff' }).anchor.setTo(0.5);
+
+    // Logic for continuing to the next level or finishing the game
+    if (this.nextLevel <= 20) {
+      var continueButton = this.add.text(this.game.world.centerX, this.game.world.centerY + 50, 'Continue', { font: '24px Arial', fill: '#fff', backgroundColor: '#333', padding: {x:15, y:10} });
+      continueButton.anchor.setTo(0.5);
+      continueButton.inputEnabled = true;
+      continueButton.events.onInputDown.addOnce(this.continueGame, this);
+    } else {
+      // Display "You Win!" message
+      this.add.text(this.game.world.centerX, this.game.world.centerY, 'You Win! All Levels Cleared!', { font: '28px Arial', fill: '#fff' }).anchor.setTo(0.5);
+      var mainMenuButton = this.add.text(this.game.world.centerX, this.game.world.centerY + 100, 'Main Menu', { font: '24px Arial', fill: '#fff', backgroundColor: '#333', padding: {x:15, y:10} });
+      mainMenuButton.anchor.setTo(0.5);
+      mainMenuButton.inputEnabled = true;
+      mainMenuButton.events.onInputDown.addOnce(this.goToMainMenu, this);
+    }
+  },
+  continueGame: function() {
+    // Proceed to the next level
+    this.state.start('PlayLevel', true, false, this.nextLevel);
+  },
+  goToMainMenu: function() {
+    // Go back to the MainMenu
+    this.state.start('MainMenu');
+  }
+};
+
+// =========================================================================
+// GameOver State
+// =========================================================================
+var GameOver = {
+  init: function(failedLevel) {
+    this.failedLevel = failedLevel;
+  },
+  create: function() {
+    // Display "Game Over!" message
+    this.add.text(this.game.world.centerX, this.game.world.centerY - 50, 'Game Over!', { font: '32px Arial', fill: '#fff' }).anchor.setTo(0.5);
+
+    // Display "Try Again" button
+    var tryAgainButton = this.add.text(this.game.world.centerX, this.game.world.centerY + 50, 'Try Again', { font: '24px Arial', fill: '#fff', backgroundColor: '#333', padding: {x:15, y:10} });
+    tryAgainButton.anchor.setTo(0.5);
+    tryAgainButton.inputEnabled = true;
+    tryAgainButton.events.onInputDown.addOnce(this.tryAgain, this);
+
+    // Display "Main Menu" button
+    var mainMenuButton = this.add.text(this.game.world.centerX, this.game.world.centerY + 120, 'Main Menu', { font: '24px Arial', fill: '#fff', backgroundColor: '#333', padding: {x:15, y:10} });
+    mainMenuButton.anchor.setTo(0.5);
+    mainMenuButton.inputEnabled = true;
+    mainMenuButton.events.onInputDown.addOnce(this.goToMainMenu, this);
+  },
+  tryAgain: function() {
+    // Restart the failed level
+    this.state.start('PlayLevel', true, false, this.failedLevel);
+  },
+  goToMainMenu: function() {
+    // Go back to the MainMenu
+    this.state.start('MainMenu');
+  }
+};
+
+// =========================================================================
+// PlayLevel State
+// =========================================================================
+var PlayLevel = {
+  init: function(levelNumber) {
+    // Initialize level number and game settings
+    this.currentLevel = levelNumber ? levelNumber : 1;
+    this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+    this.scale.pageAlignHorizontally = true;
+    this.scale.pageAlignVertically = true;
+    this.game.physics.startSystem(Phaser.Physics.ARCADE);
+    this.game.physics.arcade.gravity.y = 1000; // Set global gravity
+    this.cursors = this.game.input.keyboard.createCursorKeys(); // Enable cursor keys
+    this.game.world.setBounds(0,0,360, 700); // Set game world boundaries
+    this.RUNNING_SPEED = 180; // Player running speed
+    this.JUMPING_SPEED = 550; // Player jumping speed
+  },
+  preload: function() {
+    // Assets are loaded in Preload state
+    // Level-specific assets could be loaded here if necessary
   },
 
   create: function() {
+    // Display current level text
+    var levelStyle = { font: '18px Arial', fill: '#fff' };
+    this.levelText = this.add.text(10, 10, 'Level: ' + this.currentLevel, levelStyle);
+    this.levelText.fixedToCamera = true; // Fix text to camera
 
-    //creating 2d world with adding platform sprites and ground
-
+    // Create ground
     this.ground = this.add.sprite(0, 630, 'ground');
-    this.game.physics.arcade.enable(this.ground); // enable physics for this object
-    this.ground.body.allowGravity = false; // not allow gravity for this object
-    this.ground.body.immovable = true; // not allowing object to move if pushed or hit
+    this.game.physics.arcade.enable(this.ground);
+    this.ground.body.allowGravity = false;
+    this.ground.body.immovable = true;
 
+    // Parse level data from JSON
+    this.levelData = JSON.parse(this.game.cache.getText('level' + this.currentLevel));
 
-
-
-
-
-    //parse the json file holding level values that can be changed externally - this data is now stored in levelData variable
-
-    this.levelData = JSON.parse(this.game.cache.getText('level'));
-
-
-
-    /*
-
-    This data hee has moved to level.json file in order to use for adding new levels to the game
-      //creating a group of platforms
-    //start with a data array with x and y locations initiated on line 67
-    // var platformData = [
-    //   {"x": 0, "y": 430},
-    //   {"x": 45, "y": 550},
-    //   {"x": 90, "y": 290},
-    //   {"x": 0, "y": 140}
-    // ];*/
-
-    // Then create a group of platforms
-
+    // Create platforms group
     this.platforms = this.add.group();
-    this.platforms.enableBody = true; // enable physics for group
-
+    this.platforms.enableBody = true;
     this.levelData.platformData.forEach(function(element){
       this.platforms.create(element.x, element.y, 'platform');
     }, this);
-
-    this.platforms.setAll('body.immovable', true); // set phisics for platform group
+    this.platforms.setAll('body.immovable', true);
     this.platforms.setAll('body.allowGravity', false);
 
-    // adding fires to the platform as bad guys
-
+    // Create fires group (enemies)
     this.fires = this.add.group();
     this.fires.enableBody = true;
-
     this.levelData.fireData.forEach(function(element){
-    fire = this.fires.create(element.x, element.y, 'fire');
-    fire.animations.add('fire', [0,1], 10, true);
-    fire.play('fire');
+      var fire = this.fires.create(element.x, element.y, 'fire');
+      fire.animations.add('fire', [0,1], 10, true);
+      fire.play('fire');
     }, this);
     this.fires.setAll('body.allowGravity', false);
 
-
-    // this.platform = this.add.sprite(0, 300, 'platform');
-    // this.game.physics.arcade.enable(this.platform);
-    // this.platform.body.allowGravity = false;
-    // this.platform.body.immovable = true;
-    //
-    // this.platform2 = this.add.sprite(50, 400, 'platform');
-    // this.game.physics.arcade.enable(this.platform2);
-    // this.platform2.body.allowGravity = false;
-    // this.platform2.body.immovable = true;
-
-
-    // create the goal here which is to make it to the gorrila
-
-    this.goal = this.add.sprite(this.levelData.goal.x, this.levelData.goal.y, 'goal' );
+    // Create goal
+    this.goal = this.add.sprite(this.levelData.goal.x, this.levelData.goal.y, 'goal');
     this.game.physics.arcade.enable(this.goal);
     this.goal.body.allowGravity = false;
 
-    //adding player with animation
-    this.player = this.add.sprite(this.levelData.playerStart.x /* this is from the level.json file*/, this.levelData.playerStart.y, 'player', 3);
+    // Create player
+    this.player = this.add.sprite(this.levelData.playerStart.x, this.levelData.playerStart.y, 'player', 3);
     this.player.anchor.setTo(0.5);
     this.player.animations.add('walking', [0, 1, 2, 1], 6, true);
-
     this.game.physics.arcade.enable(this.player);
-    this.player.customParams = {}; // adding default empty custom params for now
-    // adding camera follow
+    this.player.customParams = {};
+    this.game.camera.follow(this.player); // Camera follows player
 
-    this.game.camera.follow(this.player);
-
-
-
-    // adding custom onscreen control
-
+    // Create on-screen controls
     this.createOnscreenControls();
 
-    // implement a group of barrels
-
+    // Create barrels group
     this.barrels = this.add.group();
     this.barrels.enableBody = true;
-
-    //create a loop for barrels to roll down the map
-    this.createBarrel(); // initial barrel created before the 5 second counter loop starts
+    this.createBarrel(); // Create initial barrel
+    // Create barrels periodically
     this.barrelCreator = this.game.time.events.loop(Phaser.Timer.SECOND * this.levelData.barrelFrequency, this.createBarrel, this);
-
-
   },
 
   update: function() {
-    // always use collision detection in the update method to ensure it is checked all the time and not jsut once
-
-    // collision detection with player and ground
+    // Handle collisions
     this.game.physics.arcade.collide(this.player, this.ground);
     this.game.physics.arcade.collide(this.player, this.platforms);
-
-    // collision detection with barrel and ground
     this.game.physics.arcade.collide(this.barrels, this.ground);
     this.game.physics.arcade.collide(this.barrels, this.platforms);
+    this.game.physics.arcade.overlap(this.player, this.fires, this.killPlayer, null, this); // Added null for processCallback and this for callbackContext
+    this.game.physics.arcade.overlap(this.player, this.barrels, this.killPlayer, null, this); // Added null for processCallback and this for callbackContext
+    this.game.physics.arcade.overlap(this.player, this.goal, this.win, null, this); // Added null for processCallback and this for callbackContext
 
-      // collision detection with player and fires
-    this.game.physics.arcade.overlap(this.player, this.fires, this.killPlayer);
-    this.game.physics.arcade.overlap(this.player, this.barrels, this.killPlayer);
-
-    this.game.physics.arcade.overlap(this.player, this.goal, this.win);
-    // listen for key control of player. setting velocity to 0 so that the player object doesn't continue int he same direction and reverts back to a velocity of zero when the cursor key is nnot pressed anymore
+    // Player movement
     this.player.body.velocity.x = 0;
-
     if (this.cursors.left.isDown || this.player.customParams.isMovingLeft) {
       this.player.body.velocity.x = -this.RUNNING_SPEED;
-      this.player.scale.setTo(1,1); // setting scale or direction of player back
-      this.player.play('walking');// player animation
+      this.player.scale.setTo(1,1);
+      this.player.play('walking');
     } else if (this.cursors.right.isDown || this.player.customParams.isMovingRight) {
       this.player.body.velocity.x = this.RUNNING_SPEED;
-      this.player.scale.setTo(-1,1);// set sprite to flip over to the other side x axis
+      this.player.scale.setTo(-1,1);
       this.player.play('walking');
     } else {
       this.player.animations.stop();
       this.player.frame = 3;
-
     }
 
-    this.player.body.collideWorldBounds = true;
-    this.player.body.bounce.set(1,0);
-    // for jumping this is on the y axis. to ensure jumping doesn't happen without the character being on the ground you add the touching.down value as part of the argument
+    // Player jumping
     if ((this.cursors.up.isDown || this.player.customParams.mustJump) && this.player.body.touching.down) {
       this.player.body.velocity.y = -this.JUMPING_SPEED;
       this.player.customParams.mustJump = false;
     }
+    
+    // Player world collision
+    this.player.body.collideWorldBounds = true;
+    // this.player.body.bounce.set(1,0); // Removed bounce for now as it's not explicitly requested.
 
-    // to kill each barrel element that reaches the bottom
+    // Kill barrels that go off-screen
     this.barrels.forEach(function(element){
-      if(element.x < 10 && element.y >600){
-        element.kill();}
+      if(element.x < 10 && element.y > 600){ // Adjusted y check slightly
+        element.kill();
+      }
     },this);
   },
 
-  // add the controls as sprites that will function as buttons
   createOnscreenControls: function() {
-
+    // Create and position on-screen control buttons
     this.leftArrow = this.add.button(20, 535, 'arrowButton');
     this.rightArrow = this.add.button(110, 535, 'arrowButton');
     this.actionButton = this.add.button(280, 535, 'actionButton');
+
+    // Set button appearance and fix to camera
     this.leftArrow.alpha = 0.5;
     this.rightArrow.alpha = 0.5;
     this.actionButton.alpha = 0.5;
-
-    //set buttons fixed to camera so they do not go off teh map
-
     this.leftArrow.fixedToCamera = true;
     this.rightArrow.fixedToCamera = true;
     this.actionButton.fixedToCamera = true;
-    // listen for events fo the action buttons here
 
-    // jumping
-    this.actionButton.events.onInputDown.add(function() {
-      this.player.customParams.mustJump = true;
-    }, this);
-
-    this.actionButton.events.onInputUp.add(function() {
-      this.player.customParams.mustJump = false;
-    }, this);
-    // Moving left
-
-    this.leftArrow.events.onInputDown.add(function() {
-      this.player.customParams.isMovingLeft = true;
-    }, this);
-
-    this.leftArrow.events.onInputUp.add(function() {
-      this.player.customParams.isMovingLeft = false;
-    }, this);
-
-    // Moving right
-
-    this.rightArrow.events.onInputDown.add(function() {
-      this.player.customParams.isMovingRight = true;
-    }, this);
-
-    this.rightArrow.events.onInputUp.add(function() {
-      this.player.customParams.isMovingRight = false;
-    }, this);
-
+    // Add input events for buttons
+    this.actionButton.events.onInputDown.add(function(){ this.player.customParams.mustJump = true; }, this);
+    this.actionButton.events.onInputUp.add(function(){ this.player.customParams.mustJump = false; }, this);
+    this.leftArrow.events.onInputDown.add(function(){ this.player.customParams.isMovingLeft = true; }, this);
+    this.leftArrow.events.onInputUp.add(function(){ this.player.customParams.isMovingLeft = false; }, this);
+    this.rightArrow.events.onInputDown.add(function(){ this.player.customParams.isMovingRight = true; }, this);
+    this.rightArrow.events.onInputUp.add(function(){ this.player.customParams.isMovingRight = false; }, this);
   },
 
-  // our kill player function
-  killPlayer: function(player, fire) {
-    console.log('ouch!');
-    game.state.start('GameState');
+  killPlayer: function(player, hazard) { // Changed 'fire' to 'hazard' for more generic use
+    // Transition to GameOver state, passing the current level
+    this.state.start('GameOver', true, false, this.currentLevel);
   },
 
-  // our win function
   win: function(player, goal) {
-    alert('we have a winner!');
-    game.state.start('GameState');
+    // Transition to LevelComplete state, passing the next level number
+    var nextLevelToShowInCompleteScreen = parseInt(this.currentLevel) + 1;
+    this.state.start('LevelComplete', true, false, nextLevelToShowInCompleteScreen);
   },
 
   createBarrel: function() {
-    var barrel = this.barrels.getFirstExists(false);// get first dead barrel object
-
-    if (!barrel) { // if dead barrel isn't there make new barrel
-      barrel = this.barrels.create(20,90, 'barrel'); // if no barrel present then create it
-
+    // Get a dead barrel from the group or create a new one
+    var barrel = this.barrels.getFirstExists(false);
+    if (!barrel) {
+      barrel = this.barrels.create(0, 0, 'barrel'); // Position will be reset
     }
 
-    // set out of bounds collide to stop barrels from going off screen
+    // Set barrel properties
     barrel.body.collideWorldBounds = true;
-    barrel.body.bounce.set(1,0);
-
-    barrel.reset(this.levelData.goal.x, this.levelData.goal.y);
+    barrel.body.bounce.set(1,0); // Bounce horizontally
+    barrel.reset(this.levelData.goal.x, this.levelData.goal.y); // Start barrel at goal (or specified barrel start point in JSON)
     barrel.body.velocity.x = this.levelData.barrelSpeed;
   }
-
-
-
 };
 
-//initiate the Phaser Framework
+// =========================================================================
+// Game Initialization
+// =========================================================================
 var game = new Phaser.Game(360, 592, Phaser.AUTO);
 
-game.state.add('GameState', GameState);
-game.state.start('GameState');
+// Add all states to the game
+game.state.add('Boot', Boot);
+game.state.add('Preload', Preload);
+game.state.add('MainMenu', MainMenu);
+game.state.add('PlayLevel', PlayLevel);
+game.state.add('LevelComplete', LevelComplete);
+game.state.add('GameOver', GameOver);
+
+// Start the Boot state
+game.state.start('Boot');
