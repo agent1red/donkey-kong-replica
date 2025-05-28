@@ -242,6 +242,11 @@ var PlayLevel = {
     }
     this.game.paused = true;
 
+    // Disable the main Pause Button
+    if (this.pauseButton) {
+        this.pauseButton.inputEnabled = false;
+    }
+
     // Disable on-screen game controls
     if(this.leftArrow) this.leftArrow.inputEnabled = false;
     if(this.rightArrow) this.rightArrow.inputEnabled = false;
@@ -283,10 +288,24 @@ var PlayLevel = {
     if(this.rightArrow) this.rightArrow.inputEnabled = true;
     if(this.actionButton) this.actionButton.inputEnabled = true;
 
+    // Re-enable the main Pause Button
+    if (this.pauseButton) {
+        this.pauseButton.inputEnabled = true;
+    }
+
     this.game.paused = false;
   },
 
   goToMainMenuFromPause: function() {
+    // Re-enable the main Pause Button
+    if (this.pauseButton) {
+        this.pauseButton.inputEnabled = true;
+    }
+    // Re-enable on-screen game controls as we are leaving the PlayLevel state
+    if(this.leftArrow) this.leftArrow.inputEnabled = true;
+    if(this.rightArrow) this.rightArrow.inputEnabled = true;
+    if(this.actionButton) this.actionButton.inputEnabled = true;
+
     // Ensure game is unpaused before changing state
     if (this.game.paused) {
         this.game.paused = false; // Important!
