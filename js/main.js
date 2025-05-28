@@ -218,6 +218,11 @@ var PlayLevel = {
     this.player.customParams = {};
     this.game.camera.follow(this.player); // Camera follows player
 
+    // Double Jump properties
+    this.DOUBLE_JUMP_STRENGTH_FACTOR = 0.6;
+    this.player.jumpsMade = 0;
+    this.player.maxJumps = 2;
+
     // Create on-screen controls
     this.createOnscreenControls();
 
@@ -241,6 +246,11 @@ var PlayLevel = {
       return; // Do nothing if already paused
     }
     this.game.paused = true;
+
+    // Disable the main Pause Button
+    if (this.pauseButton) {
+        this.pauseButton.inputEnabled = false;
+    }
 
     // Disable on-screen game controls
     if(this.leftArrow) this.leftArrow.inputEnabled = false;
@@ -283,10 +293,24 @@ var PlayLevel = {
     if(this.rightArrow) this.rightArrow.inputEnabled = true;
     if(this.actionButton) this.actionButton.inputEnabled = true;
 
+    // Re-enable the main Pause Button
+    if (this.pauseButton) {
+        this.pauseButton.inputEnabled = true;
+    }
+
     this.game.paused = false;
   },
 
   goToMainMenuFromPause: function() {
+    // Re-enable the main Pause Button
+    if (this.pauseButton) {
+        this.pauseButton.inputEnabled = true;
+    }
+    // Re-enable on-screen game controls as we are leaving the PlayLevel state
+    if(this.leftArrow) this.leftArrow.inputEnabled = true;
+    if(this.rightArrow) this.rightArrow.inputEnabled = true;
+    if(this.actionButton) this.actionButton.inputEnabled = true;
+
     // Ensure game is unpaused before changing state
     if (this.game.paused) {
         this.game.paused = false; // Important!
@@ -320,9 +344,26 @@ var PlayLevel = {
     }
 
     // Player jumping
-    if ((this.cursors.up.isDown || this.player.customParams.mustJump) && this.player.body.touching.down) {
-      this.player.body.velocity.y = -this.JUMPING_SPEED;
-      this.player.customParams.mustJump = false;
+    // Reset jumps if on the ground
+    if (this.player.body.touching.down) {
+        this.player.jumpsMade = 0;
+    }
+
+    // Keyboard jump input
+    if (this.cursors.up.justDown) { // Using justDown to register a single press
+        if (this.player.body.touching.down) {
+            // Standard first jump from ground
+            this.player.body.velocity.y = -this.JUMPING_SPEED;
+            this.player.jumpsMade = 1;
+        } else { // Player is in the air
+            if (this.player.jumpsMade === 0) { // Walked off a ledge, first press is 1st jump
+                this.player.body.velocity.y = -this.JUMPING_SPEED;
+                this.player.jumpsMade = 1;
+            } else if (this.player.jumpsMade < this.player.maxJumps) { // Actual double jump
+                this.player.body.velocity.y = -this.JUMPING_SPEED * this.DOUBLE_JUMP_STRENGTH_FACTOR;
+                this.player.jumpsMade++;
+            }
+        }
     }
     
     // Player world collision
@@ -352,8 +393,23 @@ var PlayLevel = {
     this.actionButton.fixedToCamera = true;
 
     // Add input events for buttons
-    this.actionButton.events.onInputDown.add(function(){ this.player.customParams.mustJump = true; }, this);
-    this.actionButton.events.onInputUp.add(function(){ this.player.customParams.mustJump = false; }, this);
+    this.actionButton.events.onInputDown.add(function() {
+        if (this.player.body.touching.down) {
+            // Standard first jump from ground
+            this.player.body.velocity.y = -this.JUMPING_SPEED;
+            this.player.jumpsMade = 1;
+        } else { // Player is in the air
+            if (this.player.jumpsMade === 0) { 
+                // This means player walked off a ledge. First press in air is their "initial" jump.
+                this.player.body.velocity.y = -this.JUMPING_SPEED;
+                this.player.jumpsMade = 1; // Consumed the first jump slot
+            } else if (this.player.jumpsMade < this.player.maxJumps) {
+                // This is the actual double jump
+                this.player.body.velocity.y = -this.JUMPING_SPEED * this.DOUBLE_JUMP_STRENGTH_FACTOR;
+                this.player.jumpsMade++; // Consumed the second jump slot
+            }
+        }
+    }, this);
     this.leftArrow.events.onInputDown.add(function(){ this.player.customParams.isMovingLeft = true; }, this);
     this.leftArrow.events.onInputUp.add(function(){ this.player.customParams.isMovingLeft = false; }, this);
     this.rightArrow.events.onInputDown.add(function(){ this.player.customParams.isMovingRight = true; }, this);
