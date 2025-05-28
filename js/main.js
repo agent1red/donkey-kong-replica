@@ -227,6 +227,71 @@ var PlayLevel = {
     this.createBarrel(); // Create initial barrel
     // Create barrels periodically
     this.barrelCreator = this.game.time.events.loop(Phaser.Timer.SECOND * this.levelData.barrelFrequency, this.createBarrel, this);
+
+    // Add Pause Button
+    this.pauseButton = this.add.text(this.game.width - 20, 20, 'Pause', { font: '18px Arial', fill: '#fff', backgroundColor: '#000', padding: {x:5, y:2} });
+    this.pauseButton.anchor.setTo(1, 0); // Anchor to top-right
+    this.pauseButton.fixedToCamera = true;
+    this.pauseButton.inputEnabled = true;
+    this.pauseButton.events.onInputDown.add(this.pauseGame, this);
+  },
+
+  pauseGame: function() {
+    if (this.game.paused) {
+      return; // Do nothing if already paused
+    }
+    this.game.paused = true;
+
+    // Disable on-screen game controls
+    if(this.leftArrow) this.leftArrow.inputEnabled = false;
+    if(this.rightArrow) this.rightArrow.inputEnabled = false;
+    if(this.actionButton) this.actionButton.inputEnabled = false;
+
+    // Create overlay
+    this.pauseOverlay = this.add.graphics(0, 0);
+    this.pauseOverlay.beginFill(0x000000, 0.7); // Black, 70% alpha
+    this.pauseOverlay.drawRect(0, 0, this.game.width, this.game.height);
+    this.pauseOverlay.endFill();
+    this.pauseOverlay.fixedToCamera = true;
+
+    // Resume button
+    this.resumeButton = this.add.text(this.game.camera.view.centerX, this.game.camera.view.centerY - 30, 'Resume', { font: '24px Arial', fill: '#fff', backgroundColor: '#333', padding: {x:10,y:5} });
+    this.resumeButton.anchor.setTo(0.5);
+    this.resumeButton.fixedToCamera = true;
+    this.resumeButton.inputEnabled = true;
+    this.resumeButton.events.onInputDown.add(this.resumeGame, this);
+
+    // Main Menu button
+    this.pauseMainMenuButton = this.add.text(this.game.camera.view.centerX, this.game.camera.view.centerY + 30, 'Main Menu', { font: '24px Arial', fill: '#fff', backgroundColor: '#333', padding: {x:10,y:5} });
+    this.pauseMainMenuButton.anchor.setTo(0.5);
+    this.pauseMainMenuButton.fixedToCamera = true;
+    this.pauseMainMenuButton.inputEnabled = true;
+    this.pauseMainMenuButton.events.onInputDown.add(this.goToMainMenuFromPause, this);
+  },
+
+  resumeGame: function() {
+    if (!this.game.paused) {
+      return; // Do nothing if not paused
+    }
+    // Destroy overlay and buttons
+    this.pauseOverlay.destroy();
+    this.resumeButton.destroy();
+    this.pauseMainMenuButton.destroy();
+
+    // Re-enable on-screen game controls
+    if(this.leftArrow) this.leftArrow.inputEnabled = true;
+    if(this.rightArrow) this.rightArrow.inputEnabled = true;
+    if(this.actionButton) this.actionButton.inputEnabled = true;
+
+    this.game.paused = false;
+  },
+
+  goToMainMenuFromPause: function() {
+    // Ensure game is unpaused before changing state
+    if (this.game.paused) {
+        this.game.paused = false; // Important!
+    }
+    this.state.start('MainMenu');
   },
 
   update: function() {
