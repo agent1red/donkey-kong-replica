@@ -1,0 +1,12 @@
+{
+  "playerStart": {"x": 10, "y": 545},
+  "platformData": [
+    {"x": 0, "y": 480}, {"x": 100, "y": 380}, {"x": 200, "y": 280}, {"x": 50, "y": 180}
+  ],
+  "fireData": [
+    {"x": 150, "y": 458}, {"x": 250, "y": 358}
+  ],
+  "goal": {"x": 60, "y": 130},
+  "barrelFrequency": 6,
+  "barrelSpeed": 100
+}
