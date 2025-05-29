@@ -268,15 +268,60 @@ var PlayLevel = {
     this.resumeButton = this.add.text(this.game.camera.view.centerX, this.game.camera.view.centerY - 30, 'Resume', { font: '24px Arial', fill: '#fff', backgroundColor: '#333', padding: {x:10,y:5} });
     this.resumeButton.anchor.setTo(0.5);
     this.resumeButton.fixedToCamera = true;
-    this.resumeButton.inputEnabled = true;
-    this.resumeButton.events.onInputDown.add(this.resumeGame, this);
+    // this.resumeButton.inputEnabled = true; // Input will be handled by the global listener
+    // this.resumeButton.events.onInputDown.add(this.resumeGame, this); // Removed direct listener
 
     // Main Menu button
     this.pauseMainMenuButton = this.add.text(this.game.camera.view.centerX, this.game.camera.view.centerY + 30, 'Main Menu', { font: '24px Arial', fill: '#fff', backgroundColor: '#333', padding: {x:10,y:5} });
     this.pauseMainMenuButton.anchor.setTo(0.5);
     this.pauseMainMenuButton.fixedToCamera = true;
-    this.pauseMainMenuButton.inputEnabled = true;
-    this.pauseMainMenuButton.events.onInputDown.add(this.goToMainMenuFromPause, this);
+    // this.pauseMainMenuButton.inputEnabled = true; // Input will be handled by the global listener
+    // this.pauseMainMenuButton.events.onInputDown.add(this.goToMainMenuFromPause, this); // Removed direct listener
+
+    // Add global input listener for pause menu
+    this.game.input.onDown.addOnce(this.handlePauseMenuClick, this);
+  },
+
+  handlePauseMenuClick: function(pointer) {
+    var resumeClicked = false;
+    var menuClicked = false;
+
+    // Check Resume Button
+    // Ensure button exists and is visible before checking bounds
+    if (this.resumeButton && this.resumeButton.exists && this.resumeButton.visible) {
+        var resumeBounds = {
+            left: this.resumeButton.cameraOffset.x - (this.resumeButton.width * this.resumeButton.anchor.x),
+            right: this.resumeButton.cameraOffset.x + (this.resumeButton.width * (1 - this.resumeButton.anchor.x)),
+            top: this.resumeButton.cameraOffset.y - (this.resumeButton.height * this.resumeButton.anchor.y),
+            bottom: this.resumeButton.cameraOffset.y + (this.resumeButton.height * (1 - this.resumeButton.anchor.y))
+        };
+        if (pointer.x >= resumeBounds.left && pointer.x <= resumeBounds.right && pointer.y >= resumeBounds.top && pointer.y <= resumeBounds.bottom) {
+            resumeClicked = true;
+        }
+    }
+
+    // Check Main Menu Button (only if resume was not clicked)
+    // Ensure button exists and is visible before checking bounds
+    if (!resumeClicked && this.pauseMainMenuButton && this.pauseMainMenuButton.exists && this.pauseMainMenuButton.visible) {
+        var menuBounds = {
+            left: this.pauseMainMenuButton.cameraOffset.x - (this.pauseMainMenuButton.width * this.pauseMainMenuButton.anchor.x),
+            right: this.pauseMainMenuButton.cameraOffset.x + (this.pauseMainMenuButton.width * (1 - this.pauseMainMenuButton.anchor.x)),
+            top: this.pauseMainMenuButton.cameraOffset.y - (this.pauseMainMenuButton.height * this.pauseMainMenuButton.anchor.y),
+            bottom: this.pauseMainMenuButton.cameraOffset.y + (this.pauseMainMenuButton.height * (1 - this.pauseMainMenuButton.anchor.y))
+        };
+        if (pointer.x >= menuBounds.left && pointer.x <= menuBounds.right && pointer.y >= menuBounds.top && pointer.y <= menuBounds.bottom) {
+            menuClicked = true;
+        }
+    }
+
+    if (resumeClicked) {
+        this.resumeGame();
+    } else if (menuClicked) {
+        this.goToMainMenuFromPause();
+    } else if (this.game.paused) {
+        // If click was outside interactive areas, re-register the listener for the next click.
+        this.game.input.onDown.addOnce(this.handlePauseMenuClick, this);
+    }
   },
 
   resumeGame: function() {
@@ -315,6 +360,18 @@ var PlayLevel = {
     if (this.game.paused) {
         this.game.paused = false; // Important!
     }
+
+    // Add these lines for explicit destruction:
+    if (this.pauseOverlay && this.pauseOverlay.exists) {
+        this.pauseOverlay.destroy();
+    }
+    if (this.resumeButton && this.resumeButton.exists) {
+        this.resumeButton.destroy();
+    }
+    if (this.pauseMainMenuButton && this.pauseMainMenuButton.exists) {
+        this.pauseMainMenuButton.destroy();
+    }
+    
     this.state.start('MainMenu');
   },
 
