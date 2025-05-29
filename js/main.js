@@ -239,6 +239,23 @@ var PlayLevel = {
     this.pauseButton.fixedToCamera = true;
     this.pauseButton.inputEnabled = true;
     this.pauseButton.events.onInputDown.add(this.pauseGame, this);
+
+    // Player Health properties
+    this.player.maxHealth = 5;
+    this.player.currentHealth = this.player.maxHealth; // Start with full health
+    this.player.isInvincible = false; // Added for invincibility
+
+    // Health display text
+    var healthStyle = { font: '18px Arial', fill: '#fff' };
+    this.healthText = this.add.text(10, 30, '', healthStyle); // Y-position adjusted to be below levelText
+    this.healthText.fixedToCamera = true;
+    this.updateHealthDisplay(); // Call this to set initial health text
+  },
+
+  updateHealthDisplay: function() {
+    if (this.healthText) { // Check if healthText exists
+        this.healthText.setText('Health: ' + this.player.currentHealth + '/' + this.player.maxHealth);
+    }
   },
 
   pauseGame: function() {
@@ -381,8 +398,8 @@ var PlayLevel = {
     this.game.physics.arcade.collide(this.player, this.platforms);
     this.game.physics.arcade.collide(this.barrels, this.ground);
     this.game.physics.arcade.collide(this.barrels, this.platforms);
-    this.game.physics.arcade.overlap(this.player, this.fires, this.killPlayer, null, this); // Added null for processCallback and this for callbackContext
-    this.game.physics.arcade.overlap(this.player, this.barrels, this.killPlayer, null, this); // Added null for processCallback and this for callbackContext
+    this.game.physics.arcade.overlap(this.player, this.fires, this.handlePlayerDamage, null, this);
+    this.game.physics.arcade.overlap(this.player, this.barrels, this.handlePlayerDamage, null, this);
     this.game.physics.arcade.overlap(this.player, this.goal, this.win, null, this); // Added null for processCallback and this for callbackContext
 
     // Player movement
@@ -473,9 +490,75 @@ var PlayLevel = {
     this.rightArrow.events.onInputUp.add(function(){ this.player.customParams.isMovingRight = false; }, this);
   },
 
-  killPlayer: function(player, hazard) { // Changed 'fire' to 'hazard' for more generic use
-    // Transition to GameOver state, passing the current level
-    this.state.start('GameOver', true, false, this.currentLevel);
+  // killPlayer: function(player, hazard) { // Changed 'fire' to 'hazard' for more generic use
+  //   // Transition to GameOver state, passing the current level
+  //   this.state.start('GameOver', true, false, this.currentLevel);
+  // },
+
+  handlePlayerDamage: function(player, hazard) {
+    if (player.isInvincible) {
+        return;
+    }
+
+    player.isInvincible = true;
+    player.currentHealth--;
+    this.updateHealthDisplay(); // Assumes this function exists from previous step
+
+    if (player.currentHealth <= 0) {
+        this.initiatePlayerDeath(player); // Call the new death function
+    } else {
+        // Make player blink or semi-transparent for invincibility feedback
+        player.alpha = 0.5;
+
+        // Set timer to end invincibility and restore alpha
+        this.game.time.events.add(Phaser.Timer.SECOND * 1.5, function() { // 1.5 seconds invincibility
+            player.isInvincible = false;
+            player.alpha = 1;
+        }, this);
+    }
+
+    // Handle the hazard itself
+    if (hazard.key === 'barrel') {
+        hazard.kill();
+    }
+    // Fires are not killed, player just passes through them while invincible
+  },
+
+  initiatePlayerDeath: function(player) {
+    // Player properties are already set from previous step:
+    // player.body.velocity.x = 0; // Already set in previous logic, or physics handles this if body.enable = false
+    // player.body.velocity.y = 0; // Already set
+    player.body.enable = false; // Physics body disabled, allowing manual position control
+    player.animations.stop();
+    player.frame = 3; // Or a specific "hurt" frame if you have one
+
+    // 1. Define animation parameters
+    var upwardDistance = 75; // Pixels to move up
+    var upwardDuration = 300; // Milliseconds for upward movement
+    var downwardDuration = 600; // Milliseconds for downward movement
+
+    // Target y for downward movement (ensure it's off-screen)
+    var targetYDown = this.game.world.height + player.height;
+
+    // 2. Create the upward tween
+    // The tween works on the player's display object properties directly.
+    var upTween = this.add.tween(player)
+        .to({ y: player.y - upwardDistance }, upwardDuration, Phaser.Easing.Quadratic.Out); // Using Quadratic.Out for a nice arc feel
+
+    // 3. Create the downward tween
+    var downTween = this.add.tween(player)
+        .to({ y: targetYDown }, downwardDuration, Phaser.Easing.Quadratic.In); // Using Quadratic.In for acceleration downwards
+
+    // 4. Chain the tweens: downTween will start after upTween completes
+    upTween.chain(downTween);
+
+    // 5. Define action when the downward tween (the whole sequence) completes
+    downTween.onComplete.add(function() {
+        this.state.start('GameOver', true, false, this.currentLevel);
+    }, this);
+
+    // 6. Start the first tween in the sequence
+    upTween.start();
   },
 
   win: function(player, goal) {
